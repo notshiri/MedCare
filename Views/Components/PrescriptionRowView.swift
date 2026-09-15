@@ -1,9 +1,6 @@
 //
 //  PrescriptionRowView.swift
 //  MedCare
-//
-//  Reusable row used in PrescriptionListView.
-//
 
 import SwiftUI
 

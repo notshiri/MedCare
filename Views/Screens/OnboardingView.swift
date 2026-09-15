@@ -1,11 +1,7 @@
 //
 //  OnboardingView.swift
 //  MedCare
-//
-//  Shown once on first launch (gated by @AppStorage in MedCareApp).
-//  A short paged intro to the app's three core ideas before dropping
-//  the user into the main tab bar.
-//
+
 
 import SwiftUI
 

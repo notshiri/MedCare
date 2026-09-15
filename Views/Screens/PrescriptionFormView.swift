@@ -1,10 +1,6 @@
 //
 //  PrescriptionFormView.swift
 //  MedCare
-//
-//  SCREEN 3 — Shared form used both for adding a brand-new prescription
-//  and for editing an existing one, so the two flows can't drift apart.
-//
 
 import SwiftUI
 

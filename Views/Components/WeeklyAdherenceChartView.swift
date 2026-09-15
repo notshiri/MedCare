@@ -1,10 +1,6 @@
 //
 //  WeeklyAdherenceChartView.swift
 //  MedCare
-//
-//  Reusable Swift Charts component showing the last 7 days of daily
-//  adherence percentage as a bar chart. Used on the Health Grade screen.
-//
 
 import SwiftUI
 import Charts

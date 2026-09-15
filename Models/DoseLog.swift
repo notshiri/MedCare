@@ -1,10 +1,6 @@
 //
 //  DoseLog.swift
 //  MedCare
-//
-//  MODEL — records a single scheduled dose for a prescription and
-//  whether the user took it, missed it, or hasn't responded yet.
-//
 
 import Foundation
 

@@ -1,12 +1,6 @@
 //
 //  PersistenceStore.swift
 //  MedCare
-//
-//  Lightweight local persistence using UserDefaults + JSON encoding.
-//  Kept separate from PrescriptionController so the controller's
-//  business logic isn't tangled up with storage details — swapping
-//  this for Core Data or a backend later only touches this file.
-//
 
 import Foundation
 

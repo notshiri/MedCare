@@ -1,14 +1,7 @@
 //
 //  DoseRowView.swift
 //  MedCare
-//
-//  Reusable row shown in the Dashboard's "Today" list — displays one
-//  scheduled dose and lets the user mark it Taken or Missed.
-//
-//  Laid out with senior/low-vision users in mind: large labeled
-//  buttons (not tiny icon-only taps), haptic confirmation, and full
-//  VoiceOver labels that read as one clear sentence.
-//
+
 
 import SwiftUI
 
@@ -79,8 +72,6 @@ struct DoseRowView: View {
         }
     }
 
-    /// A large, clearly-labeled pill button — at least 44pt tall, with
-    /// both an icon and text so it's never ambiguous what tapping it does.
     private func actionButton(
         title: String,
         systemImage: String,

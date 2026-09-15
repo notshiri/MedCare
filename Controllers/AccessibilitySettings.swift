@@ -1,13 +1,6 @@
 //
 //  AccessibilitySettings.swift
 //  MedCare
-//
-//  CONTROLLER — holds the user's accessibility preferences (Large Text
-//  Mode, High Contrast Mode, Haptic Feedback) as shared, persisted
-//  state. Injected as an environment object so every screen and
-//  reusable component can react to it live, without each screen
-//  managing its own copy.
-//
 
 import Foundation
 import Combine
@@ -36,7 +29,6 @@ final class AccessibilitySettings: ObservableObject {
         let defaults = UserDefaults.standard
         self.isLargeTextMode = defaults.bool(forKey: Keys.largeText)
         self.isHighContrastMode = defaults.bool(forKey: Keys.highContrast)
-        // Default haptics ON unless the user has explicitly turned them off.
         self.isHapticFeedbackEnabled = defaults.object(forKey: Keys.haptics) == nil
             ? true
             : defaults.bool(forKey: Keys.haptics)

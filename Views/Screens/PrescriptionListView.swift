@@ -2,10 +2,7 @@
 //  PrescriptionListView.swift
 //  MedCare
 //
-//  SCREEN 2 — "Medicines". Lists every prescription the user has
-//  logged, with navigation to a detail screen and a button to add a
-//  new one.
-//
+
 
 import SwiftUI
 

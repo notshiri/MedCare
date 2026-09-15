@@ -2,9 +2,6 @@
 //  SettingsView.swift
 //  MedCare
 //
-//  SCREEN 6 — Settings: notification permission status, accessibility
-//  preferences (Large Text, High Contrast, Haptics), and a reset option.
-//
 
 import SwiftUI
 

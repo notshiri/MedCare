@@ -27,7 +27,6 @@ final class NotificationController: NSObject, ObservableObject {
     }
 
     // MARK: - Permission
-
     func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             DispatchQueue.main.async {
@@ -52,7 +51,6 @@ final class NotificationController: NSObject, ObservableObject {
     }
 
     // MARK: - Scheduling daily reminders
-
     func scheduleReminders(for prescription: Prescription) {
         guard prescription.isActive else { return }
 
@@ -117,7 +115,6 @@ final class NotificationController: NSObject, ObservableObject {
 }
 
 // MARK: - UNUserNotificationCenterDelegate
-
 extension NotificationController: UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(

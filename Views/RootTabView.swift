@@ -1,16 +1,9 @@
 //
 //  RootTabView.swift
 //  MedCare
-//
-//  Top-level navigation shell. Each tab hosts its own NavigationStack
-//  so screens can push/pop independently while sharing the same
-//  environment Controllers.
-//
 
 import SwiftUI
 
-/// Top-level switcher: shows the one-time OnboardingView on first
-/// launch, then the main tab bar from then on.
 struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 

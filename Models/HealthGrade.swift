@@ -1,11 +1,6 @@
 //
 //  HealthGrade.swift
 //  MedCare
-//
-//  MODEL — represents the app's signature A–F adherence grade.
-//  Pure data + a pure mapping function; no business logic that
-//  touches live app state (that lives in PrescriptionController).
-//
 
 import Foundation
 
@@ -26,7 +21,6 @@ enum HealthGrade: String, CaseIterable {
         }
     }
 
-    /// Maps an adherence percentage (0...100) to a letter grade.
     static func from(percentage: Double) -> HealthGrade {
         switch percentage {
         case 90...100: return .a

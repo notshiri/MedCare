@@ -1,10 +1,7 @@
 //
 //  HealthGradeBadgeView.swift
 //  MedCare
-//
-//  Reusable circular badge showing a letter grade. Used on both the
-//  Dashboard (compact) and the Health Grade screen (large).
-//
+
 
 import SwiftUI
 

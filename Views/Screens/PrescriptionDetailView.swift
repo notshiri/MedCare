@@ -1,11 +1,7 @@
 //
 //  PrescriptionDetailView.swift
 //  MedCare
-//
-//  SCREEN 4 — Detail view for a single prescription: shows its info,
-//  its personal adherence percentage, refill status, dose history, and
-//  lets the user edit, pause, or delete it.
-//
+
 
 import SwiftUI
 
@@ -18,9 +14,6 @@ struct PrescriptionDetailView: View {
     @State private var isShowingDeleteConfirm = false
     @State private var isShowingEditSheet = false
 
-    /// Always reads the freshest copy from the controller (so edits made
-    /// via the Edit sheet show up immediately) but falls back to the
-    /// value passed in if it's somehow been deleted mid-view.
     private var current: Prescription {
         controller.prescriptions.first(where: { $0.id == prescription.id }) ?? prescription
     }

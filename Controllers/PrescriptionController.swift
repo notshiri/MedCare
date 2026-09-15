@@ -1,12 +1,6 @@
 //
 //  PrescriptionController.swift
 //  MedCare
-//
-//  CONTROLLER — owns app state (prescriptions + dose logs), contains
-//  all business logic (adherence math, dose generation, marking doses
-//  taken/missed), and is the only thing Views are allowed to mutate
-//  through. Views stay "dumb" and just call methods here.
-//
 
 import Foundation
 import Combine
@@ -26,7 +20,6 @@ final class PrescriptionController: ObservableObject {
     }
 
     // MARK: - Prescription CRUD
-
     func addPrescription(_ prescription: Prescription, notifier: NotificationController) {
         prescriptions.append(prescription)
         persistPrescriptions()
@@ -52,8 +45,6 @@ final class PrescriptionController: ObservableObject {
 
     // MARK: - Dose generation
 
-    /// Creates today's pending DoseLog entries for every active
-    /// prescription's reminder times, if they don't already exist.
     func generateTodaysDoseLogsIfNeeded() {
         let calendar = Calendar.current
         let today = Date()
@@ -79,7 +70,6 @@ final class PrescriptionController: ObservableObject {
         persistDoseLogs()
     }
 
-    /// Returns today's doses sorted by scheduled time.
     func todaysDoses() -> [DoseLog] {
         let calendar = Calendar.current
         return doseLogs
@@ -98,7 +88,6 @@ final class PrescriptionController: ObservableObject {
     }
 
     // MARK: - Marking doses
-
     func markDose(_ doseLog: DoseLog, as status: DoseStatus) {
         guard let index = doseLogs.firstIndex(where: { $0.id == doseLog.id }) else { return }
         doseLogs[index].status = status
@@ -110,9 +99,6 @@ final class PrescriptionController: ObservableObject {
         }
     }
 
-    /// Decrements the pill count for a prescription when a dose is taken,
-    /// and fires a one-time "time to refill" notification the moment the
-    /// count crosses the user's threshold.
     private func decrementPillCount(for prescriptionId: UUID) {
         guard let index = prescriptions.firstIndex(where: { $0.id == prescriptionId }) else { return }
         guard let remaining = prescriptions[index].pillsRemaining, remaining > 0 else { return }
@@ -126,16 +112,11 @@ final class PrescriptionController: ObservableObject {
         }
     }
 
-    /// Returns prescriptions that are currently low on refill (for badges
-    /// / alerts elsewhere in the UI).
     func lowRefillPrescriptions() -> [Prescription] {
         prescriptions.filter { $0.isLowOnRefill }
     }
 
     // MARK: - Health Grade / Adherence
-
-    /// Overall adherence percentage across all responded doses
-    /// (pending doses are excluded so the grade reflects real behavior).
     func adherencePercentage() -> Double {
         let responded = doseLogs.filter { $0.status != .pending }
         guard !responded.isEmpty else { return 100 } // no history yet -> benefit of the doubt
@@ -147,7 +128,6 @@ final class PrescriptionController: ObservableObject {
         HealthGrade.from(percentage: adherencePercentage())
     }
 
-    /// Adherence percentage scoped to a single prescription.
     func adherencePercentage(for prescription: Prescription) -> Double {
         let responded = doseLogs(for: prescription).filter { $0.status != .pending }
         guard !responded.isEmpty else { return 100 }
@@ -155,8 +135,6 @@ final class PrescriptionController: ObservableObject {
         return (Double(takenCount) / Double(responded.count)) * 100
     }
 
-    /// Current consecutive-day streak of fully-taken days (simple version:
-    /// counts back from today while every dose that day was taken).
     func currentStreak() -> Int {
         let calendar = Calendar.current
         var streak = 0
@@ -177,10 +155,6 @@ final class PrescriptionController: ObservableObject {
         return streak
     }
 
-    /// Daily adherence percentage for each of the last 7 days (oldest
-    /// first), used to draw the weekly bar chart on the Health Grade
-    /// screen. A day with no scheduled doses is reported as nil so the
-    /// chart can render it as an empty bar.
     func weeklyAdherenceData() -> [(date: Date, percentage: Double?)] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -198,7 +172,6 @@ final class PrescriptionController: ObservableObject {
     }
 
     // MARK: - Persistence helpers
-
     private func persistPrescriptions() {
         store.savePrescriptions(prescriptions)
     }

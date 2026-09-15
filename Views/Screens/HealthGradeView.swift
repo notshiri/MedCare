@@ -1,11 +1,6 @@
 //
 //  HealthGradeView.swift
 //  MedCare
-//
-//  SCREEN 5 — "Health Grade". The app's standout feature: a large,
-//  visual breakdown of the user's overall adherence grade plus a
-//  per-medicine adherence bar chart.
-//
 
 import SwiftUI
 

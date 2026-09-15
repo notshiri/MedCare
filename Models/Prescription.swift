@@ -1,11 +1,6 @@
 //
 //  Prescription.swift
 //  MedCare
-//
-//  MODEL — plain data type describing a medicine the user is tracking.
-//  Contains no business logic or UI code (that belongs to the
-//  Controller and View layers respectively).
-//
 
 import Foundation
 import SwiftUI

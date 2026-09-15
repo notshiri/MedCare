@@ -1,10 +1,7 @@
 //
 //  DashboardView.swift
 //  MedCare
-//
-//  SCREEN 1 — "Today". Shows a compact Health Grade summary plus the
-//  list of doses scheduled for today with quick Taken/Missed actions.
-//
+
 
 import SwiftUI
 
@@ -22,7 +19,6 @@ struct DashboardView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    // Summary card
                     HStack {
                         HealthGradeBadgeView(grade: controller.currentHealthGrade(), size: 70)
                         VStack(alignment: .leading, spacing: 4) {
