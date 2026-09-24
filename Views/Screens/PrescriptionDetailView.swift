@@ -2,12 +2,12 @@
 //  PrescriptionDetailView.swift
 //  MedCare
 
-
 import SwiftUI
 
 struct PrescriptionDetailView: View {
     @EnvironmentObject var controller: PrescriptionController
     @EnvironmentObject var notifier: NotificationController
+    @EnvironmentObject var loc: LocalizationManager
     @Environment(\.dismiss) private var dismiss
 
     let prescription: Prescription
@@ -123,7 +123,7 @@ struct PrescriptionDetailView: View {
                     Button(role: .destructive) {
                         isShowingDeleteConfirm = true
                     } label: {
-                        Text("Delete Prescription")
+                        Text(loc.t("Delete Prescription"))
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -136,7 +136,7 @@ struct PrescriptionDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Edit") { isShowingEditSheet = true }
+                Button(loc.t("Edit")) { isShowingEditSheet = true }
             }
         }
         .sheet(isPresented: $isShowingEditSheet) {
@@ -174,5 +174,6 @@ struct PrescriptionDetailView: View {
             .environmentObject(PrescriptionController())
             .environmentObject(NotificationController())
             .environmentObject(AccessibilitySettings())
+            .environmentObject(LocalizationManager())
     }
 }

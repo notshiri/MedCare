@@ -2,11 +2,11 @@
 //  DoseRowView.swift
 //  MedCare
 
-
 import SwiftUI
 
 struct DoseRowView: View {
     @EnvironmentObject var accessibility: AccessibilitySettings
+    @EnvironmentObject var loc: LocalizationManager
 
     let prescription: Prescription
     let doseLog: DoseLog
@@ -42,10 +42,10 @@ struct DoseRowView: View {
 
             if doseLog.status == .pending {
                 HStack(spacing: 12) {
-                    actionButton(title: "Missed", systemImage: "xmark.circle.fill", tint: Theme.petalPink) {
+                    actionButton(title: loc.t("Missed"), systemImage: "xmark.circle.fill", tint: Theme.petalPink) {
                         mark(.missed)
                     }
-                    actionButton(title: "Taken", systemImage: "checkmark.circle.fill", tint: Theme.leafGreen) {
+                    actionButton(title: loc.t("Taken"), systemImage: "checkmark.circle.fill", tint: Theme.leafGreen) {
                         mark(.taken)
                     }
                 }
@@ -60,11 +60,11 @@ struct DoseRowView: View {
     private var statusBadge: some View {
         switch doseLog.status {
         case .taken:
-            Label("Taken", systemImage: "checkmark.circle.fill")
+            Label(loc.t("Taken"), systemImage: "checkmark.circle.fill")
                 .font(Theme.captionFont.weight(.semibold))
                 .foregroundColor(Theme.leafGreen)
         case .missed:
-            Label("Missed", systemImage: "xmark.circle.fill")
+            Label(loc.t("Missed"), systemImage: "xmark.circle.fill")
                 .font(Theme.captionFont.weight(.semibold))
                 .foregroundColor(Theme.petalPink)
         case .pending:

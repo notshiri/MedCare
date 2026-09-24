@@ -2,11 +2,11 @@
 //  DashboardView.swift
 //  MedCare
 
-
 import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var controller: PrescriptionController
+    @EnvironmentObject var loc: LocalizationManager
 
     private var todaysDoses: [DoseLog] {
         controller.todaysDoses()
@@ -22,7 +22,7 @@ struct DashboardView: View {
                     HStack {
                         HealthGradeBadgeView(grade: controller.currentHealthGrade(), size: 70)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Your Health Grade")
+                            Text(loc.t("Your Health Grade"))
                                 .font(Theme.captionFont)
                                 .secondaryTextStyle()
                             Text(controller.currentHealthGrade().label)
@@ -35,7 +35,7 @@ struct DashboardView: View {
                     }
                     .cardStyle()
 
-                    Text("Today's Doses")
+                    Text(loc.t("Today's Doses"))
                         .font(Theme.headingFont)
                         .padding(.horizontal, 4)
 
@@ -68,7 +68,7 @@ struct DashboardView: View {
             Image(systemName: "leaf.circle")
                 .font(.system(size: 44))
                 .foregroundColor(Theme.leafGreen)
-            Text("No doses scheduled for today")
+            Text(loc.t("No doses scheduled for today"))
                 .font(Theme.bodyFont)
                 .secondaryTextStyle()
             Text("Add a prescription in the Medicines tab to get started.")
@@ -87,5 +87,6 @@ struct DashboardView: View {
             .environmentObject(PrescriptionController())
             .environmentObject(NotificationController())
             .environmentObject(AccessibilitySettings())
+            .environmentObject(LocalizationManager())
     }
 }

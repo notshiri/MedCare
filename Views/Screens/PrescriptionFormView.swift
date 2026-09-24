@@ -19,6 +19,7 @@ struct PrescriptionFormView: View {
 
     @EnvironmentObject var controller: PrescriptionController
     @EnvironmentObject var notifier: NotificationController
+    @EnvironmentObject var loc: LocalizationManager
     @Environment(\.dismiss) private var dismiss
 
     let mode: Mode
@@ -33,9 +34,6 @@ struct PrescriptionFormView: View {
     @State private var pillsRemainingText = ""
     @State private var refillThresholdText = ""
 
-    // Refill Calculator — a small in-form utility (no extra screen) that
-    // works out how many pills to buy for a given number of days,
-    // based on how many reminder times (doses/day) are set above.
     @State private var calculatorDaysSupply = 30
     @State private var calculatorResultPills = 0
     @State private var isShowingCalculatorAlert = false
@@ -118,13 +116,13 @@ struct PrescriptionFormView: View {
                     Text("When enabled, MedCare will count down each time you mark a dose Taken and send a one-time refill alert once the count drops to your threshold. Use the calculator to work out how many pills to request based on your reminder schedule.")
                 }
             }
-            .navigationTitle(mode.title)
+            .navigationTitle(loc.t(mode.title))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(loc.t("Cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button(loc.t("Save")) { save() }
                         .disabled(!isValid)
                 }
             }
@@ -145,10 +143,6 @@ struct PrescriptionFormView: View {
         return "Based on \(dosesPerDay) dose\(dosesPerDay == 1 ? "" : "s") per day, you'll need approximately \(calculatorResultPills) pills to cover a \(calculatorDaysSupply)-day supply."
     }
 
-    /// Processes the user's Stepper input (days supply) together with
-    /// however many reminder times they've set, and produces a
-    /// meaningful result: how many pills to request for that period.
-    /// The result is surfaced via a genuine SwiftUI Alert.
     private func calculateRefill() {
         let dosesPerDay = max(reminderTimes.count, 1)
         calculatorResultPills = dosesPerDay * calculatorDaysSupply
@@ -215,4 +209,5 @@ struct PrescriptionFormView: View {
         .environmentObject(PrescriptionController())
         .environmentObject(NotificationController())
             .environmentObject(AccessibilitySettings())
+            .environmentObject(LocalizationManager())
 }

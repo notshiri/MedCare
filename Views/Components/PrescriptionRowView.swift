@@ -5,6 +5,7 @@
 import SwiftUI
 
 struct PrescriptionRowView: View {
+    @EnvironmentObject var loc: LocalizationManager
     let prescription: Prescription
 
     var body: some View {
@@ -34,7 +35,7 @@ struct PrescriptionRowView: View {
 
             VStack(alignment: .trailing, spacing: 6) {
                 if !prescription.isActive {
-                    Text("Paused")
+                    Text(loc.t("Paused"))
                         .font(Theme.captionFont)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -42,7 +43,7 @@ struct PrescriptionRowView: View {
                         .clipShape(Capsule())
                 }
                 if prescription.isLowOnRefill {
-                    Label("Refill", systemImage: "exclamationmark.triangle.fill")
+                    Label(loc.t("Refill"), systemImage: "exclamationmark.triangle.fill")
                         .font(Theme.captionFont)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)

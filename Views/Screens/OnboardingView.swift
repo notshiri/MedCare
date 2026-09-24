@@ -2,10 +2,10 @@
 //  OnboardingView.swift
 //  MedCare
 
-
 import SwiftUI
 
 struct OnboardingView: View {
+    @EnvironmentObject var loc: LocalizationManager
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var pageIndex = 0
 
@@ -47,7 +47,7 @@ struct OnboardingView: View {
                         hasCompletedOnboarding = true
                     }
                 } label: {
-                    Text(pageIndex < pages.count - 1 ? "Next" : "Get Started")
+                    Text(pageIndex < pages.count - 1 ? loc.t("Next") : loc.t("Get Started"))
                         .font(Theme.bodyFont.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -59,7 +59,7 @@ struct OnboardingView: View {
                 .padding(.bottom, 24)
 
                 if pageIndex < pages.count - 1 {
-                    Button("Skip") {
+                    Button(loc.t("Skip")) {
                         hasCompletedOnboarding = true
                     }
                     .font(Theme.captionFont)
@@ -103,4 +103,5 @@ private struct OnboardingPageView: View {
 #Preview {
     OnboardingView()
         .environmentObject(AccessibilitySettings())
+        .environmentObject(LocalizationManager())
 }

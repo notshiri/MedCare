@@ -6,6 +6,7 @@ import SwiftUI
 
 struct HealthGradeView: View {
     @EnvironmentObject var controller: PrescriptionController
+    @EnvironmentObject var loc: LocalizationManager
 
     var body: some View {
         ZStack {
@@ -28,14 +29,14 @@ struct HealthGradeView: View {
                     .cardStyle()
 
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Last 7 Days")
+                        Text(loc.t("Last 7 Days"))
                             .font(Theme.headingFont)
                         WeeklyAdherenceChartView(data: controller.weeklyAdherenceData())
                     }
                     .cardStyle()
 
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("Grade Scale")
+                        Text(loc.t("Grade Scale"))
                             .font(Theme.headingFont)
                         ForEach(HealthGrade.allCases, id: \.self) { grade in
                             HStack {
@@ -54,7 +55,7 @@ struct HealthGradeView: View {
 
                     if !controller.prescriptions.isEmpty {
                         VStack(alignment: .leading, spacing: 14) {
-                            Text("By Medicine")
+                            Text(loc.t("By Medicine"))
                                 .font(Theme.headingFont)
                             ForEach(controller.prescriptions) { prescription in
                                 let percent = controller.adherencePercentage(for: prescription)
@@ -85,7 +86,7 @@ struct HealthGradeView: View {
                 .padding()
             }
         }
-        .navigationTitle("Health Grade")
+        .navigationTitle(loc.t("Health Grade"))
     }
 
     private func rangeText(for grade: HealthGrade) -> String {
@@ -105,5 +106,6 @@ struct HealthGradeView: View {
             .environmentObject(PrescriptionController())
             .environmentObject(NotificationController())
             .environmentObject(AccessibilitySettings())
+            .environmentObject(LocalizationManager())
     }
 }

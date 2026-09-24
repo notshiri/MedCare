@@ -4,9 +4,10 @@
 
 import Foundation
 import SwiftUI
+import FirebaseFirestore
 
 struct Prescription: Identifiable, Codable, Equatable {
-    let id: UUID
+    @DocumentID var id: String?
     var name: String
     var dosage: String
     var instructions: String
@@ -19,7 +20,7 @@ struct Prescription: Identifiable, Codable, Equatable {
     var refillThreshold: Int?
 
     init(
-        id: UUID = UUID(),
+        id: String? = nil,
         name: String,
         dosage: String,
         instructions: String = "",

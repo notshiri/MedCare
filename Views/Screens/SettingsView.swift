@@ -1,7 +1,6 @@
 //
 //  SettingsView.swift
 //  MedCare
-//
 
 import SwiftUI
 
@@ -9,13 +8,28 @@ struct SettingsView: View {
     @EnvironmentObject var notifier: NotificationController
     @EnvironmentObject var controller: PrescriptionController
     @EnvironmentObject var accessibility: AccessibilitySettings
+    @EnvironmentObject var auth: AuthController
+    @EnvironmentObject var loc: LocalizationManager
     @State private var isShowingResetConfirm = false
+    @State private var isShowingSignOutConfirm = false
 
     var body: some View {
         ZStack {
             BotanicalBackgroundView()
             Form {
-                Section("Notifications") {
+                Section(loc.t("Account")) {
+                    HStack {
+                        Text("Signed in as")
+                        Spacer()
+                        Text(auth.userEmail ?? "—").secondaryTextStyle()
+                    }
+                    Button(loc.t("Sign Out"), role: .destructive) {
+                        isShowingSignOutConfirm = true
+                    }
+                    .frame(minHeight: Theme.minTapTarget)
+                }
+
+                Section(loc.t("Notifications")) {
                     HStack {
                         Text("Push Notifications")
                         Spacer()
@@ -30,6 +44,31 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Picker(loc.t("Language"), selection: $loc.language) {
+                        ForEach(AppLanguage.allCases, id: \.self) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                } header: {
+                    Text(loc.t("Language"))
+                } footer: {
+                    Text("Switches the app's own interface text. Medicine names and dosages you've entered are never translated.")
+                }
+
+                Section {
+                    Picker("Appearance", selection: $accessibility.appearanceMode) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Appearance")
+                } footer: {
+                    Text("\"System\" follows your device's own Light/Dark Mode setting.")
+                }
+
+                Section {
                     Toggle(isOn: $accessibility.isLargeTextMode) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Large Text Mode")
@@ -41,7 +80,7 @@ struct SettingsView: View {
                     Toggle(isOn: $accessibility.isHighContrastMode) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("High Contrast Mode")
-                            Text("Uses bold black text, plain white cards, and outlined borders for maximum readability.")
+                            Text("Uses bold text and outlined borders for maximum readability.")
                                 .font(Theme.captionFont)
                                 .secondaryTextStyle()
                         }
@@ -55,12 +94,12 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Accessibility")
+                    Text(loc.t("Accessibility"))
                 } footer: {
                     Text("These settings also respect your device's own Text Size and Bold Text settings in the iOS Settings app.")
                 }
 
-                Section("About") {
+                Section(loc.t("About")) {
                     HStack {
                         Text("App")
                         Spacer()
@@ -71,8 +110,8 @@ struct SettingsView: View {
                         .secondaryTextStyle()
                 }
 
-                Section("Data") {
-                    Button("Reset All Data", role: .destructive) {
+                Section(loc.t("Data")) {
+                    Button(loc.t("Reset All Data"), role: .destructive) {
                         isShowingResetConfirm = true
                     }
                     .frame(minHeight: Theme.minTapTarget)
@@ -80,7 +119,7 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle("Settings")
+        .navigationTitle(loc.t("Settings"))
         .confirmationDialog(
             "This will delete all prescriptions and dose history.",
             isPresented: $isShowingResetConfirm,
@@ -91,7 +130,17 @@ struct SettingsView: View {
                     controller.deletePrescription(prescription, notifier: notifier)
                 }
             }
-            Button("Cancel", role: .cancel) {}
+            Button(loc.t("Cancel"), role: .cancel) {}
+        }
+        .confirmationDialog(
+            "Sign out of MedCare?",
+            isPresented: $isShowingSignOutConfirm,
+            titleVisibility: .visible
+        ) {
+            Button(loc.t("Sign Out"), role: .destructive) {
+                auth.signOut()
+            }
+            Button(loc.t("Cancel"), role: .cancel) {}
         }
     }
 }
@@ -102,5 +151,7 @@ struct SettingsView: View {
             .environmentObject(PrescriptionController())
             .environmentObject(NotificationController())
             .environmentObject(AccessibilitySettings())
+            .environmentObject(AuthController())
+            .environmentObject(LocalizationManager())
     }
 }

@@ -2,9 +2,30 @@
 //  AccessibilitySettings.swift
 //  MedCare
 
+
 import Foundation
 import Combine
 import SwiftUI
+
+enum AppearanceMode: String, CaseIterable {
+    case system, light, dark
+
+    var displayName: String {
+        switch self {
+        case .system: return "System"
+        case .light:  return "Light"
+        case .dark:   return "Dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light:  return .light
+        case .dark:   return .dark
+        }
+    }
+}
 
 @MainActor
 final class AccessibilitySettings: ObservableObject {
@@ -18,11 +39,15 @@ final class AccessibilitySettings: ObservableObject {
     @Published var isHapticFeedbackEnabled: Bool {
         didSet { UserDefaults.standard.set(isHapticFeedbackEnabled, forKey: Keys.haptics) }
     }
+    @Published var appearanceMode: AppearanceMode {
+        didSet { UserDefaults.standard.set(appearanceMode.rawValue, forKey: Keys.appearance) }
+    }
 
     private enum Keys {
         static let largeText = "medcare.accessibility.largeText"
         static let highContrast = "medcare.accessibility.highContrast"
         static let haptics = "medcare.accessibility.haptics"
+        static let appearance = "medcare.display.appearance"
     }
 
     init() {
@@ -32,6 +57,7 @@ final class AccessibilitySettings: ObservableObject {
         self.isHapticFeedbackEnabled = defaults.object(forKey: Keys.haptics) == nil
             ? true
             : defaults.bool(forKey: Keys.haptics)
+        self.appearanceMode = AppearanceMode(rawValue: defaults.string(forKey: Keys.appearance) ?? "") ?? .system
     }
 
     var dynamicTypeRange: ClosedRange<DynamicTypeSize> {

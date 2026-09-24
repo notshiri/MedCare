@@ -2,8 +2,10 @@
 //  PrescriptionController.swift
 //  MedCare
 
+
 import Foundation
 import Combine
+import FirebaseFirestore
 
 @MainActor
 final class PrescriptionController: ObservableObject {
@@ -11,45 +13,91 @@ final class PrescriptionController: ObservableObject {
     @Published private(set) var prescriptions: [Prescription] = []
     @Published private(set) var doseLogs: [DoseLog] = []
 
-    private let store = PersistenceStore()
+    private let service = FirestoreService()
+    private var userId: String?
+    private var prescriptionListener: ListenerRegistration?
+    private var doseLogListener: ListenerRegistration?
 
-    init() {
-        prescriptions = store.loadPrescriptions()
-        doseLogs = store.loadDoseLogs()
-        generateTodaysDoseLogsIfNeeded()
+    // MARK: - Session lifecycle
+    func startListening(userId: String) {
+        guard self.userId != userId else { return }
+        stopListening()
+        self.userId = userId
+
+        prescriptionListener = service.listenToPrescriptions(userId: userId) { [weak self] items in
+            Task { @MainActor in
+                self?.prescriptions = items
+                self?.generateTodaysDoseLogsIfNeeded()
+            }
+        }
+        doseLogListener = service.listenToDoseLogs(userId: userId) { [weak self] items in
+            Task { @MainActor in
+                self?.doseLogs = items
+            }
+        }
+    }
+
+    func stopListening() {
+        prescriptionListener?.remove()
+        doseLogListener?.remove()
+        prescriptionListener = nil
+        doseLogListener = nil
+        userId = nil
+        prescriptions = []
+        doseLogs = []
     }
 
     // MARK: - Prescription CRUD
+
     func addPrescription(_ prescription: Prescription, notifier: NotificationController) {
-        prescriptions.append(prescription)
-        persistPrescriptions()
-        generateTodaysDoseLogsIfNeeded()
-        notifier.scheduleReminders(for: prescription)
+        guard let userId else { return }
+        Task {
+            do {
+                let saved = try await service.addPrescription(prescription, userId: userId)
+                notifier.scheduleReminders(for: saved)
+            } catch {
+                print("Failed to add prescription: \(error)")
+            }
+        }
     }
 
     func updatePrescription(_ prescription: Prescription, notifier: NotificationController) {
-        guard let index = prescriptions.firstIndex(where: { $0.id == prescription.id }) else { return }
-        prescriptions[index] = prescription
-        persistPrescriptions()
-        notifier.cancelReminders(for: prescription.id)
-        notifier.scheduleReminders(for: prescription)
+        guard let userId else { return }
+        Task {
+            do {
+                try await service.updatePrescription(prescription, userId: userId)
+                if let id = prescription.id {
+                    notifier.cancelReminders(for: id)
+                }
+                notifier.scheduleReminders(for: prescription)
+            } catch {
+                print("Failed to update prescription: \(error)")
+            }
+        }
     }
 
     func deletePrescription(_ prescription: Prescription, notifier: NotificationController) {
-        prescriptions.removeAll { $0.id == prescription.id }
-        doseLogs.removeAll { $0.prescriptionId == prescription.id }
-        persistPrescriptions()
-        persistDoseLogs()
-        notifier.cancelReminders(for: prescription.id)
+        guard let userId, let id = prescription.id else { return }
+        Task {
+            do {
+                try await service.deletePrescription(id: id, userId: userId)
+                try await service.deleteDoseLogs(prescriptionId: id, userId: userId)
+                notifier.cancelReminders(for: id)
+            } catch {
+                print("Failed to delete prescription: \(error)")
+            }
+        }
     }
 
     // MARK: - Dose generation
 
     func generateTodaysDoseLogsIfNeeded() {
+        guard let userId else { return }
         let calendar = Calendar.current
         let today = Date()
 
         for prescription in prescriptions where prescription.isActive {
+            guard let prescriptionId = prescription.id else { continue }
             for comps in prescription.reminderTimes {
                 guard let scheduled = calendar.date(
                     bySettingHour: comps.hour ?? 8,
@@ -59,15 +107,17 @@ final class PrescriptionController: ObservableObject {
                 ) else { continue }
 
                 let alreadyExists = doseLogs.contains {
-                    $0.prescriptionId == prescription.id &&
+                    $0.prescriptionId == prescriptionId &&
                     calendar.isDate($0.scheduledDate, equalTo: scheduled, toGranularity: .minute)
                 }
                 if !alreadyExists {
-                    doseLogs.append(DoseLog(prescriptionId: prescription.id, scheduledDate: scheduled))
+                    let newLog = DoseLog(prescriptionId: prescriptionId, scheduledDate: scheduled)
+                    Task {
+                        try? await service.addDoseLog(newLog, userId: userId)
+                    }
                 }
             }
         }
-        persistDoseLogs()
     }
 
     func todaysDoses() -> [DoseLog] {
@@ -88,27 +138,41 @@ final class PrescriptionController: ObservableObject {
     }
 
     // MARK: - Marking doses
-    func markDose(_ doseLog: DoseLog, as status: DoseStatus) {
-        guard let index = doseLogs.firstIndex(where: { $0.id == doseLog.id }) else { return }
-        doseLogs[index].status = status
-        doseLogs[index].respondedAt = Date()
-        persistDoseLogs()
 
-        if status == .taken {
-            decrementPillCount(for: doseLog.prescriptionId)
+    func markDose(_ doseLog: DoseLog, as status: DoseStatus) {
+        guard let userId else { return }
+        var updated = doseLog
+        updated.status = status
+        updated.respondedAt = Date()
+
+        Task {
+            do {
+                try await service.updateDoseLog(updated, userId: userId)
+                if status == .taken {
+                    await decrementPillCount(for: doseLog.prescriptionId)
+                }
+            } catch {
+                print("Failed to mark dose: \(error)")
+            }
         }
     }
 
-    private func decrementPillCount(for prescriptionId: UUID) {
+    private func decrementPillCount(for prescriptionId: String) async {
+        guard let userId else { return }
         guard let index = prescriptions.firstIndex(where: { $0.id == prescriptionId }) else { return }
         guard let remaining = prescriptions[index].pillsRemaining, remaining > 0 else { return }
 
         let wasAboveThreshold = !prescriptions[index].isLowOnRefill
-        prescriptions[index].pillsRemaining = remaining - 1
-        persistPrescriptions()
+        var updated = prescriptions[index]
+        updated.pillsRemaining = remaining - 1
 
-        if wasAboveThreshold && prescriptions[index].isLowOnRefill {
-            NotificationController.sendRefillAlert(for: prescriptions[index])
+        do {
+            try await service.updatePrescription(updated, userId: userId)
+            if wasAboveThreshold && updated.isLowOnRefill {
+                NotificationController.sendRefillAlert(for: updated)
+            }
+        } catch {
+            print("Failed to update pill count: \(error)")
         }
     }
 
@@ -117,6 +181,7 @@ final class PrescriptionController: ObservableObject {
     }
 
     // MARK: - Health Grade / Adherence
+
     func adherencePercentage() -> Double {
         let responded = doseLogs.filter { $0.status != .pending }
         guard !responded.isEmpty else { return 100 } // no history yet -> benefit of the doubt
@@ -154,7 +219,7 @@ final class PrescriptionController: ObservableObject {
         }
         return streak
     }
-
+    
     func weeklyAdherenceData() -> [(date: Date, percentage: Double?)] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -169,14 +234,5 @@ final class PrescriptionController: ObservableObject {
             let percentage = (Double(taken) / Double(dosesForDay.count)) * 100
             return (day, percentage)
         }
-    }
-
-    // MARK: - Persistence helpers
-    private func persistPrescriptions() {
-        store.savePrescriptions(prescriptions)
-    }
-
-    private func persistDoseLogs() {
-        store.saveDoseLogs(doseLogs)
     }
 }

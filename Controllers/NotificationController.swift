@@ -1,21 +1,22 @@
 //
 //  NotificationController.swift
 //  MedCare
-//
 
 import Foundation
 import UserNotifications
 import Combine
+import SwiftUI
 
 private enum NotificationConstants {
     static let reminderCategory = "MEDICATION_REMINDER"
     static let snoozeAction = "SNOOZE_ACTION"
-    static let snoozeInterval: TimeInterval = 15 * 60
+    static let snoozeInterval: TimeInterval = 15 * 60 
     static let prescriptionIdKey = "prescriptionId"
     static let prescriptionNameKey = "prescriptionName"
     static let dosageKey = "dosage"
 }
 
+@MainActor
 final class NotificationController: NSObject, ObservableObject {
 
     @Published var isAuthorized: Bool = false
@@ -27,6 +28,7 @@ final class NotificationController: NSObject, ObservableObject {
     }
 
     // MARK: - Permission
+
     func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             DispatchQueue.main.async {
@@ -51,8 +53,9 @@ final class NotificationController: NSObject, ObservableObject {
     }
 
     // MARK: - Scheduling daily reminders
+
     func scheduleReminders(for prescription: Prescription) {
-        guard prescription.isActive else { return }
+        guard prescription.isActive, let prescriptionId = prescription.id else { return }
 
         for (index, comps) in prescription.reminderTimes.enumerated() {
             let content = makeContent(for: prescription)
@@ -62,7 +65,7 @@ final class NotificationController: NSObject, ObservableObject {
             trigger.minute = comps.minute
 
             let request = UNNotificationRequest(
-                identifier: identifier(for: prescription.id, index: index),
+                identifier: identifier(for: prescriptionId, index: index),
                 content: content,
                 trigger: UNCalendarNotificationTrigger(dateMatching: trigger, repeats: true)
             )
@@ -70,11 +73,11 @@ final class NotificationController: NSObject, ObservableObject {
         }
     }
 
-    func cancelReminders(for prescriptionId: UUID) {
+    func cancelReminders(for prescriptionId: String) {
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
             let idsToRemove = requests
                 .map(\.identifier)
-                .filter { $0.hasPrefix(prescriptionId.uuidString) }
+                .filter { $0.hasPrefix(prescriptionId) }
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: idsToRemove)
         }
     }
@@ -86,18 +89,18 @@ final class NotificationController: NSObject, ObservableObject {
         content.sound = .default
         content.categoryIdentifier = NotificationConstants.reminderCategory
         content.userInfo = [
-            NotificationConstants.prescriptionIdKey: prescription.id.uuidString,
+            NotificationConstants.prescriptionIdKey: prescription.id ?? "",
             NotificationConstants.prescriptionNameKey: prescription.name,
             NotificationConstants.dosageKey: prescription.dosage
         ]
         return content
     }
 
-    private func identifier(for prescriptionId: UUID, index: Int) -> String {
-        "\(prescriptionId.uuidString)-reminder-\(index)"
+    private func identifier(for prescriptionId: String, index: Int) -> String {
+        "\(prescriptionId)-reminder-\(index)"
     }
 
-    // MARK: - Refill alerts
+    // MARK: - Refill alerts (one-off, not repeating)
 
     static func sendRefillAlert(for prescription: Prescription) {
         let content = UNMutableNotificationContent()
@@ -106,7 +109,7 @@ final class NotificationController: NSObject, ObservableObject {
         content.sound = .default
 
         let request = UNNotificationRequest(
-            identifier: "\(prescription.id.uuidString)-refill-\(UUID().uuidString)",
+            identifier: "\(prescription.id ?? UUID().uuidString)-refill-\(UUID().uuidString)",
             content: content,
             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         )
@@ -115,9 +118,10 @@ final class NotificationController: NSObject, ObservableObject {
 }
 
 // MARK: - UNUserNotificationCenterDelegate
+
 extension NotificationController: UNUserNotificationCenterDelegate {
 
-    func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
@@ -125,7 +129,7 @@ extension NotificationController: UNUserNotificationCenterDelegate {
         completionHandler([.banner, .sound, .list])
     }
 
-    func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
